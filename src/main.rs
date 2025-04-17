@@ -10,7 +10,10 @@ use editor::EditorState;
 use ratatui::{
     Frame,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState},
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Style},
     text::Text,
+    widgets::{Block, Borders},
 };
 use tracing::{info, trace};
 use tracing_subscriber::EnvFilter;
@@ -50,7 +53,35 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+// const TEXT_BG: Color = Color::Rgb(0x3b, 0x22, 0x4a);
+const TEXT_BG: Color = Color::Rgb(0x4a, 0x22, 0x3b);
+const TEXT_FG: Color = Color::White;
+const STATUS_BAR_BG: Color = Color::Rgb(0x32, 0x17, 0x28);
+const STATUS_BAR_FG: Color = Color::White;
+
 pub fn draw_frame(frame: &mut Frame) {
-    let text = Text::raw("Hello, world!").centered();
-    frame.render_widget(text, frame.area());
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![
+            Constraint::Fill(1),
+            Constraint::Length(1),
+            Constraint::Length(1),
+        ])
+        .split(frame.area());
+
+    let text_area = Block::new()
+        .style(Style::default().bg(TEXT_BG).fg(TEXT_FG))
+        .borders(Borders::NONE);
+
+    let status_bar_area = Block::new()
+        .style(Style::default().bg(STATUS_BAR_BG).fg(STATUS_BAR_FG))
+        .borders(Borders::NONE);
+
+    let command_area = Block::new()
+        .style(Style::default().bg(TEXT_BG).fg(TEXT_FG))
+        .borders(Borders::NONE);
+
+    frame.render_widget(text_area, layout[0]);
+    frame.render_widget(status_bar_area, layout[1]);
+    frame.render_widget(command_area, layout[2]);
 }
