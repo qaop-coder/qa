@@ -1,17 +1,14 @@
-use std::path::PathBuf;
+#![allow(unused)]
+
+mod config;
+mod editor;
 
 use clap::Parser;
 use color_eyre::Result;
+use config::CliConfig;
+use editor::EditorState;
 use tracing::{info, trace};
 use tracing_subscriber::EnvFilter;
-
-/// Command line configuration for the application.
-#[derive(Parser, Debug)]
-#[clap(author = "QAOP", version, about = "QAOP's personal editor", long_about = None)]
-pub struct CliConfig {
-    /// The paths to edit.
-    paths: Vec<PathBuf>,
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -22,10 +19,13 @@ async fn main() -> Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
+    info!("Starting editor...");
 
     let config = CliConfig::parse();
-
-    info!("Starting editor...");
     trace!("Configuration: {:#?}", config);
+
+    // Initialize the editor state
+    let editor_state = EditorState::new(&config);
+
     Ok(())
 }
