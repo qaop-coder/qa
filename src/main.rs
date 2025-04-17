@@ -8,6 +8,7 @@ use color_eyre::Result;
 use config::CliConfig;
 use editor::EditorState;
 use ratatui::{
+    Frame,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState},
     text::Text,
 };
@@ -33,14 +34,11 @@ async fn main() -> Result<()> {
 
     let mut terminal = ratatui::init();
     loop {
-        terminal.draw(|frame| {
-            let text = Text::raw("Hello, world!");
-            frame.render_widget(text, frame.area());
-        });
+        terminal.draw(draw_frame);
         if matches!(
             event::read(),
             Ok(Event::Key(KeyEvent {
-                code: KeyCode::Esc,
+                code: KeyCode::Char('q'),
                 ..
             }))
         ) {
@@ -50,4 +48,9 @@ async fn main() -> Result<()> {
     ratatui::restore();
 
     Ok(())
+}
+
+pub fn draw_frame(frame: &mut Frame) {
+    let text = Text::raw("Hello, world!").centered();
+    frame.render_widget(text, frame.area());
 }
