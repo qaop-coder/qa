@@ -3,6 +3,8 @@
 mod buffer;
 mod config;
 mod editor;
+mod render;
+mod theme;
 mod view;
 
 use clap::Parser;
@@ -13,8 +15,9 @@ use ratatui::{
     Frame,
     crossterm::event::{self, Event, KeyCode, KeyEvent},
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, Borders},
+};
+use render::{
+    command_area::render_command_area, status_bar::render_status_bar, text_area::render_text_area,
 };
 use tracing::{info, level_filters::LevelFilter, trace};
 
@@ -38,7 +41,7 @@ async fn main() -> Result<()> {
 
     let mut terminal = ratatui::init();
     loop {
-        let _ = terminal.draw(draw_frame);
+        let _ = terminal.draw(|frame| draw_frame(frame, &editor_state));
         if matches!(
             event::read(),
             Ok(Event::Key(KeyEvent {
@@ -57,13 +60,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-// const TEXT_BG: Color = Color::Rgb(0x3b, 0x22, 0x4a);
-const TEXT_BG: Color = Color::Rgb(0x4a, 0x22, 0x3b);
-const TEXT_FG: Color = Color::White;
-const STATUS_BAR_BG: Color = Color::Rgb(0x32, 0x17, 0x28);
-const STATUS_BAR_FG: Color = Color::White;
-
-pub fn draw_frame(frame: &mut Frame) {
+pub fn draw_frame(frame: &mut Frame, editor_state: &EditorState) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(vec![
@@ -73,19 +70,7 @@ pub fn draw_frame(frame: &mut Frame) {
         ])
         .split(frame.area());
 
-    let text_area = Block::new()
-        .style(Style::default().bg(TEXT_BG).fg(TEXT_FG))
-        .borders(Borders::NONE);
-
-    let status_bar_area = Block::new()
-        .style(Style::default().bg(STATUS_BAR_BG).fg(STATUS_BAR_FG))
-        .borders(Borders::NONE);
-
-    let command_area = Block::new()
-        .style(Style::default().bg(TEXT_BG).fg(TEXT_FG))
-        .borders(Borders::NONE);
-
-    frame.render_widget(text_area, layout[0]);
-    frame.render_widget(status_bar_area, layout[1]);
-    frame.render_widget(command_area, layout[2]);
+    render_text_area(frame, layout[0], editor_state);
+    render_status_bar(frame, layout[1], editor_state);
+    render_command_area(frame, layout[2]);
 }

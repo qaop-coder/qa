@@ -5,7 +5,7 @@ use std::{
 };
 
 use color_eyre::Result;
-use crop::Rope;
+use crop::{Rope, RopeSlice};
 
 /// A buffer in the editor.
 pub struct Buffer {
@@ -36,6 +36,14 @@ impl Buffer {
             rope,
             file_path: Some(path.to_path_buf()),
         })
+    }
+
+    pub fn num_lines(&self) -> usize {
+        self.rope.lines().count()
+    }
+
+    pub fn get_line(&self, line_index: usize) -> RopeSlice {
+        self.rope.line(line_index)
     }
 }
 

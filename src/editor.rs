@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Editor's state
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct EditorState {
     /// Temporary IDs
     next_buffer_id: usize,
@@ -22,6 +22,9 @@ pub struct EditorState {
 
     /// The current view in the editor.
     current_view: usize,
+
+    /// Editing state
+    mode: EditorMode,
 }
 
 impl EditorState {
@@ -61,18 +64,55 @@ impl EditorState {
                 next_view_id: 1,
                 buffers,
                 views,
-                current_view: 0,
+                ..Default::default()
             }
         } else {
             let views = create_first_views(buffer_index);
             EditorState {
                 next_buffer_id: buffer_index,
-                next_view_id: 0,
-
+                next_view_id: buffer_index,
                 buffers,
                 views,
-                current_view: 0,
+                ..Default::default()
             }
         }
     }
+
+    pub fn current_view(&self) -> &View {
+        self.views
+            .get(&self.current_view)
+            .expect("Current view index does not reference an existing view")
+    }
+
+    pub fn current_buffer(&self) -> &Buffer {
+        let view = self.current_view();
+        self.buffers
+            .get(&view.buffer_id)
+            .expect("Current view does not reference an existing buffer")
+    }
+
+    pub fn mode_str(&self) -> &str {
+        match self.mode {
+            EditorMode::Normal => "NOR",
+            EditorMode::Insert => "INS",
+            EditorMode::Command => "CMD",
+            EditorMode::Select => "SEL",
+        }
+    }
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub enum EditorMode {
+    /// Normal mode, where the editor is in a state of normal operation.
+    #[default]
+    Normal,
+
+    /// Insert mode, where the editor is in a state of inserting text.
+    Insert,
+
+    /// Command mode, where the editor is in a state of executing commands.
+    Command,
+
+    /// Select mode, where the editor is in a state of selecting text.
+    Select,
 }
