@@ -1,51 +1,78 @@
-use std::{fs::read_to_string, path::PathBuf};
+use std::collections::BTreeMap;
 
-use crop::Rope;
-use tracing::trace;
+use maplit::btreemap;
+use tracing::info;
 
-use crate::config::CliConfig;
+use crate::{
+    buffer::Buffer,
+    config::CliConfig,
+    view::{View, create_first_views},
+};
 
 /// Editor's state
 #[derive(Debug)]
 pub struct EditorState {
+    /// Temporary IDs
+    next_buffer_id: usize,
+    next_view_id: usize,
+
     /// Buffers currently open in the editor.
-    buffers: Vec<Buffer>,
-}
+    buffers: BTreeMap<usize, Buffer>,
+    views: BTreeMap<usize, View>,
 
-/// A buffer in the editor.
-#[derive(Debug)]
-pub struct Buffer {
-    /// The content of the buffer.
-    rope: Rope,
-
-    /// The path to the file.
-    file_path: Option<PathBuf>,
+    /// The current view in the editor.
+    current_view: usize,
 }
 
 impl EditorState {
     pub fn new(config: &CliConfig) -> Self {
+        let mut buffer_index = 0;
+
         // Initialize the editor state
         let buffers = config
             .paths
             .iter()
-            .map(|path| {
+            .filter_map(|path| {
                 let path = path.canonicalize().unwrap_or_else(|_| path.clone());
-                trace!("Opening file: {:?}", path);
+                info!("Opening file: {:?}", path);
 
-                let file = read_to_string(path.clone()).unwrap_or_else(|_| {
-                    trace!("Failed to read file: {:?}", path);
-                    String::new()
-                });
+                let current_buffer_index = buffer_index;
+                buffer_index += 1;
 
-                let rope = Rope::from(file);
-
-                Buffer {
-                    rope,
-                    file_path: Some(path.clone()),
+                let buffer = Buffer::load(&path);
+                match buffer {
+                    Ok(buffer) => Some((current_buffer_index, buffer)),
+                    Err(_) => None,
                 }
             })
-            .collect::<Vec<_>>();
+            .collect::<BTreeMap<_, _>>();
 
-        EditorState { buffers }
+        if buffers.is_empty() {
+            // If no buffers were loaded, create a new empty buffer
+            let empty_buffer = Buffer::empty();
+            let buffers = btreemap!(
+                0 => empty_buffer,
+            );
+
+            let views = create_first_views(1);
+
+            EditorState {
+                next_buffer_id: 1,
+                next_view_id: 1,
+                buffers,
+                views,
+                current_view: 0,
+            }
+        } else {
+            let views = create_first_views(buffer_index);
+            EditorState {
+                next_buffer_id: buffer_index,
+                next_view_id: 0,
+
+                buffers,
+                views,
+                current_view: 0,
+            }
+        }
     }
 }

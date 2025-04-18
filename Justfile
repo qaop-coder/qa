@@ -2,7 +2,10 @@ default:
     just --list
 
 dev:
-    RUST_LOG=trace bacon clippy
+    RUST_LOG=trace cargo watch -q -c -x "run -- src/main.rs Cargo.lock"
+
+check:
+    bacon clippy
 
 run *args:
     RUST_LOG=trace cargo run -- {{args}}
@@ -17,6 +20,7 @@ test:
     cargo test
 
 alias d := dev
+alias ch := check
 alias r := run
 alias rr := run-release
 alias c := clean

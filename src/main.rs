@@ -1,7 +1,9 @@
-#![allow(unused)]
+#![allow(dead_code)]
 
+mod buffer;
 mod config;
 mod editor;
+mod view;
 
 use clap::Parser;
 use color_eyre::Result;
@@ -9,10 +11,9 @@ use config::CliConfig;
 use editor::EditorState;
 use ratatui::{
     Frame,
-    crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState},
+    crossterm::event::{self, Event, KeyCode, KeyEvent},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
-    text::Text,
     widgets::{Block, Borders},
 };
 use tracing::{info, trace};
@@ -37,7 +38,7 @@ async fn main() -> Result<()> {
 
     let mut terminal = ratatui::init();
     loop {
-        terminal.draw(draw_frame);
+        let _ = terminal.draw(draw_frame);
         if matches!(
             event::read(),
             Ok(Event::Key(KeyEvent {
@@ -49,6 +50,9 @@ async fn main() -> Result<()> {
         }
     }
     ratatui::restore();
+
+    trace!("Editor state: {:#?}", editor_state);
+    info!("Exiting editor...");
 
     Ok(())
 }
