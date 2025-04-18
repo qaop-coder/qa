@@ -16,8 +16,7 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, Borders},
 };
-use tracing::{info, trace};
-use tracing_subscriber::EnvFilter;
+use tracing::{info, level_filters::LevelFilter, trace};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,7 +24,8 @@ async fn main() -> Result<()> {
     let subscriber = tracing_subscriber::fmt()
         .compact()
         .without_time()
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_max_level(LevelFilter::TRACE)
+        // .with_env_filter(EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
     info!("Starting editor...");

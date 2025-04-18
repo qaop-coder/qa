@@ -19,9 +19,13 @@ clean:
 test:
     cargo test
 
+install:
+    cargo install --path .
+
 alias d := dev
 alias ch := check
 alias r := run
 alias rr := run-release
 alias c := clean
 alias t := test
+alias i := install
