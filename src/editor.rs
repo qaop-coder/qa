@@ -84,11 +84,30 @@ impl EditorState {
             .expect("Current view index does not reference an existing view")
     }
 
-    pub fn current_buffer(&self) -> &Buffer {
-        let view = self.current_view();
+    pub fn current_view_mut(&mut self) -> &mut View {
+        self.views
+            .get_mut(&self.current_view)
+            .expect("Current view index does not reference an existing view")
+    }
+
+    pub fn get_buffer_from_view(&self, view: &View) -> &Buffer {
+        self.get_buffer(view.buffer_id)
+    }
+
+    pub fn get_buffer_from_view_mut(&mut self, view: &View) -> &mut Buffer {
+        self.get_buffer_mut(view.buffer_id)
+    }
+
+    pub fn get_buffer(&self, buffer_id: usize) -> &Buffer {
         self.buffers
-            .get(&view.buffer_id)
-            .expect("Current view does not reference an existing buffer")
+            .get(&buffer_id)
+            .expect("Buffer ID does not reference an existing buffer")
+    }
+
+    pub fn get_buffer_mut(&mut self, buffer_id: usize) -> &mut Buffer {
+        self.buffers
+            .get_mut(&buffer_id)
+            .expect("Buffer ID does not reference an existing buffer")
     }
 
     pub fn mode_str(&self) -> &str {

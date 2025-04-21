@@ -37,19 +37,21 @@ async fn main() -> Result<()> {
     trace!("Configuration: {:#?}", config);
 
     // Initialize the editor state
-    let editor_state = EditorState::new(&config);
+    let mut editor_state = EditorState::new(&config);
 
     let mut terminal = ratatui::init();
     loop {
         let _ = terminal.draw(|frame| draw_frame(frame, &editor_state));
-        if matches!(
-            event::read(),
-            Ok(Event::Key(KeyEvent {
-                code: KeyCode::Char('q'),
-                ..
-            }))
-        ) {
-            break;
+        match event::read() {
+            Ok(Event::Key(KeyEvent { code, .. })) => match code {
+                KeyCode::Esc => break,
+                KeyCode::Char('q') => break,
+                KeyCode::Char('j') => command_scroll_up(&mut editor_state),
+                KeyCode::Char('k') => command_scroll_down(&mut editor_state),
+                _ => {}
+            },
+            Ok(_) => {}
+            Err(_) => break,
         }
     }
     ratatui::restore();
@@ -73,4 +75,25 @@ pub fn draw_frame(frame: &mut Frame, editor_state: &EditorState) {
     render_text_area(frame, layout[0], editor_state);
     render_status_bar(frame, layout[1], editor_state);
     render_command_area(frame, layout[2]);
+}
+
+fn command_scroll_up(editor_state: &mut EditorState) {
+    let view = editor_state.current_view();
+    let buffer_id = view.buffer_id;
+    let buffer = editor_state.get_buffer(buffer_id);
+
+    let num_lines = buffer.num_lines();
+
+    let view = editor_state.current_view_mut();
+    if view.top_line < num_lines - 1 {
+        view.top_line += 1;
+    }
+}
+
+fn command_scroll_down(editor_state: &mut EditorState) {
+    let view = editor_state.current_view_mut();
+
+    if view.top_line > 0 {
+        view.top_line -= 1;
+    }
 }

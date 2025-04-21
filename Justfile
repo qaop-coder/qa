@@ -2,7 +2,7 @@ default:
     just --list
 
 dev:
-    RUST_LOG=trace cargo watch -q -c -x "run -- README.md Cargo.lock"
+    RUST_LOG=trace cargo watch -q -c -x "run -- src/main.rs Cargo.lock"
 
 check:
     bacon clippy
